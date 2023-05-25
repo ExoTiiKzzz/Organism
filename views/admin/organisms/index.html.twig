@@ -1,0 +1,80 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Organisms
+{% endblock %}
+
+{% block content %}
+    <h1>Organisms list</h1>
+
+    <button class="btn btn-success">
+        <a href="/admin/organisms/new">Add an organism</a>
+    </button>
+
+    <form action="/admin/organisms/delete" method="post">
+        <table class="table">
+            <thead>
+            <tr>
+                <th>
+                    <label>
+                        <input class="form-check checkAll" type="checkbox">
+                    </label>
+                </th>
+                <th>Name</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for organism in organisms %}
+                <tr>
+                    <td>
+                        <label for="">
+                            <input class="form-check lineCheck" type="checkbox" name="organisms[]" value="{{ organism._id }}">
+                        </label>
+                    </td>
+
+                    <td>{{ organism.name }}</td>
+                    <td>
+                        <div class="d-flex gap-3">
+                            <button class="btn btn-primary">
+                                <a href="/admin/organisms/{{ organism._id }}">See</a>
+                            </button>
+                            <a href="/admin/organisms/{{ organism._id }}/delete" type="submit" class="btn btn-danger deleteuserBtn">Delete</a>
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="5">No organisms found</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        <button type="submit" class="btn btn-danger">Delete selected organisms</button>
+    </form>
+
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+		const deleteuserBtns = document.querySelectorAll('.deleteuserBtn');
+		deleteuserBtns.forEach(btn => {
+			btn.addEventListener('click', (e) => {
+				e.preventDefault();
+				if(confirm('Are you sure you want to delete this organism ?')) {
+					window.location.href = e.target.href;
+				}
+			})
+		})
+
+		const checkAll = document.querySelector('.checkAll');
+		const lineChecks = document.querySelectorAll('.lineCheck');
+		checkAll.addEventListener('click', () => {
+			lineChecks.forEach(check => {
+				check.checked = checkAll.checked;
+			})
+		});
+    </script>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends '/base.html.twig' %}
+
+{% block title %}Bienvenue !{% endblock %}
+
+{% block content %}
+    {% if students is not empty %}
+        <div class="alert alert-info">
+            Il y a {{ students|length }} étudiant{%  if students|length > 1 %}s{% endif %} n'ayant pas leur numéro de carte d'identité renseigné. <br>
+            <a class="alert-link" href="/students/missing">Les ajouter</a>
+        </div>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends '../base.html.twig' %}
+
+{% block title %}
+    users
+{% endblock %}
+
+{% block content %}
+    <h1>Users</h1>
+
+    <button class="btn btn-success">
+        <a href="/admin/users/new">Add a user</a>
+    </button>
+
+    <form action="/admin/users/delete" method="post">
+        <table class="table">
+            <thead>
+            <tr>
+                <th>
+                    <label>
+                        <input class="form-check checkAll" type="checkbox">
+                    </label>
+                </th>
+                <th>Username</th>
+                <th>Organism</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for user in users %}
+                <tr>
+                    <td>
+                        <label for="">
+                            <input class="form-check lineCheck" type="checkbox" name="users[]" value="{{ user._id }}">
+                        </label>
+                    </td>
+
+                    <td>{{ user.username }}</td>
+                    <td>
+                        {{ user.organism.name ?? 'Unknown' }}
+                    </td>
+                    <td>
+                        <div class="d-flex gap-3">
+                            <button class="btn btn-primary">
+                                <a href="/admin/users/{{ user._id }}">See</a>
+                            </button>
+                            <a href="/admin/users/{{ user._id }}/delete" type="submit" class="btn btn-danger deleteuserBtn">Delete</a>
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="5">No users found</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        <button type="submit" class="btn btn-danger">Delete selected users</button>
+    </form>
+
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        const deleteuserBtns = document.querySelectorAll('.deleteuserBtn');
+        deleteuserBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if(confirm('Voulez-vous vraiment supprimer ce livre ?')) {
+                    location.href = e.target.href;
+                }
+            })
+        })
+
+        const checkAll = document.querySelector('.checkAll');
+		const lineChecks = document.querySelectorAll('.lineCheck');
+		checkAll.addEventListener('click', () => {
+			lineChecks.forEach(check => {
+                check.checked = checkAll.checked;
+            })
+        });
+    </script>
+{% endblock %}

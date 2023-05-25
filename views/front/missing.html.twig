@@ -1,0 +1,36 @@
+{% extends '/base.html.twig' %}
+
+{% block title %}Bienvenue !{% endblock %}
+
+{% block content %}
+    {% if students is not empty %}
+        <form action="/students/missing" method="post">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Prénom</th>
+                        <th>Nom</th>
+                        <th>INE</th>
+                        <th>Numéro CI</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                        <tr>
+                            <td>{{ student.PRENOM }}</td>
+                            <td>{{ student.NOM }}</td>
+                            <td>{{ student.INE }}</td>
+                            <td>
+                                <label>
+                                    <input class="form-control" type="text" name="ci[{{ student._id }}]" id="CI">
+                                </label>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <button type="submit" class="btn btn-primary">Valider</button>
+        </form>
+    {% endif %}
+{% endblock %}

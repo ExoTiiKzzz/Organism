@@ -1,0 +1,20 @@
+{% extends '/base.html.twig' %}
+
+{% block title %}New students{% endblock %}
+
+{% block content %}
+    <form method="post" enctype="multipart/form-data" action="/provide">
+        <div class="form-group">
+            <label for="year">Year</label>
+            <input type="text" class="form-control" id="year" name="year" placeholder="Year">
+        </div>
+
+        <div class="form-group">
+            <label for="csv">CSV</label>
+            <input class="form-control" type="file" name="csv" id="csv">
+        </div>
+
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+{% endblock %}
+```

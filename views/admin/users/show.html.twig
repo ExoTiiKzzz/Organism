@@ -1,0 +1,47 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    {{ user.username ?? 'New user' }}
+{% endblock %}
+
+{% block content %}
+    {% set action = '/admin/users/new' %}
+    {% if user is defined and user._id %}
+        {% set action = '/admin/users/' ~ user._id %}
+    {% endif %}
+    <form method="post" class="form" action="{{ action }}" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" name="name" id="name" value="{{ user.username }}" class="form-control">
+        </div>
+
+        <div class="form-group mt-3">
+            <label for="organism">organism</label>
+            <select class="form-select" name="organism" id="organism">
+                {% for organism in organisms %}
+                    <option value="{{ organism._id }}" {% if user is defined and user.organism._id == organism._id %}selected{% endif %}>{{ organism.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group mt-3">
+            {% if user.image is defined %}
+                <div class="col-md-2">
+                    <img class="img-fluid" src="/images/{{ user.image }}" alt="{{ user.username }}" />
+                </div>
+            {% endif %}
+
+            <label for="image">Image</label>
+
+            {# only image types #}
+            <input id="image" class="form-control" type="file" name="image"
+                     accept="image/*"
+
+            />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save</button>
+
+
+    </form>
+{% endblock %}
