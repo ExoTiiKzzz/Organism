@@ -1,0 +1,37 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    {% if promo is defined %}
+        {{ promo.title }}
+    {% else %}
+        Nouvelle promotion
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    <form action="">
+        <div class="form-group">
+            <label for="title">Titre</label>
+            <input type="text" id="title" name="title" class="form-control" value="{{ promo.name }}">
+        </div>
+
+        <div class="form-group">
+            <label for="start">Date de début</label>
+            <input type="date" id="start" name="start" class="form-control" value="{{ promo.start|date('Y-m-d') }}">
+        </div>
+
+        <div class="form-group">
+            <label for="end">Date de fin</label>
+            <input type="date" id="end" name="end" class="form-control" value="{{ promo.end|date('Y-m-d') }}">
+        </div>
+
+        <div class="form-group">
+            <label for="sector">Filière</label>
+            <select name="sector" id="sector">
+                {% for sector in sectors %}
+                    <option value="{{ sector.id }}" {% if sector._id == promo.sector._id %}selected{% endif %}>{{ sector.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+{% endblock %}

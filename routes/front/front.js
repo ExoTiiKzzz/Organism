@@ -17,7 +17,7 @@ router.get('/', async (req, res) => {
 
     res.render('front/index.html.twig', {
         studentsWithoutCiNumber: studentsWithoutCiNumber.data.documents,
-        studentsWithoutCiImage: studentsWithoutCiImage.data.documents
+        studentsWithoutCiImage: studentsWithoutCiImage?.data?.documents
     })
 });
 

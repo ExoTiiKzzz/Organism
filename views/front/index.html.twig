@@ -3,6 +3,9 @@
 {% block title %}Bienvenue !{% endblock %}
 
 {% block content %}
+    <a href="/provide" class="btn btn-link">
+        Upload un fichier CSV
+    </a>
     {% if studentsWithoutCiNumber is not empty %}
         <div class="alert alert-info">
             Il y a {{ studentsWithoutCiNumber|length }} étudiant{%  if studentsWithoutCiNumber|length > 1 %}s{% endif %} n'ayant pas leur numéro de carte d'identité renseigné. <br>

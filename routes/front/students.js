@@ -61,33 +61,40 @@ router.get('/missing/photo', async (req, res) => {
 
 router.post('/missing/photo', async (req, res) => {
     //save zip file in uploads folder
-    let randomString = Math.random().toString(36).substring(7);
+    let randomString = Math.random().toString(36).substring(7) + Math.random().toString(36).substring(7) + Math.random().toString(36).substring(7);
     let uploadDir = 'uploads';
     if (!fs.existsSync(uploadDir)) {
+        console.log('qbjsqjbdqsjbdjnj')
         fs.mkdirSync(uploadDir);
     }
     //create directory if it doesn't exist
-    let dir = `uploads/${randomString}`;
+    let dir = `${uploadDir}/${randomString}`;
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir);
     }
     //save file
     let zip = req.files.file;
+    console.log('pdpdsppsdf')
     await zip.mv(`${dir}/${zip.name}`, async function (err) {
 
     });
 
     //unzip file
+    console.log('pisdoqjdojsqd')
     await decompress(`${dir}/${zip.name}`, dir);
 
+    dir = `${dir}/${zip.name.split('.')[0]}`;
+
     //get all files in directory
-    let files = fs.readdirSync(dir + '/zip');
+    console.log('qsdqsdqsd')
+    let files = fs.readdirSync(dir);
 
     //loop through files
     let imageExtensions = ['jpg', 'jpeg', 'png'];
     for (let i = 0; i < files.length; i++) {
+        let extension = files[i].split('.').pop();
         //check if file is image
-        if (imageExtensions.includes(files[i].split('.').pop())) {
+        if (imageExtensions.includes(extension)) {
             //get student ci number
             let studentCiNumber = files[i].split('.')[0];
             //get student
@@ -99,16 +106,26 @@ router.post('/missing/photo', async (req, res) => {
                 }
             }, 'students', 'findOne');
 
+            student = student.data?.document;
+
             //if student exists
-            if (student.data) {
-                let studentId = student.data._id.$oid;
+            if (student) {
+                let studentId = student._id;
+                //random file name with 30 characters
+                let randomStringForImage = Math.random().toString(36).substring(7) + Math.random().toString(36).substring(7) + Math.random().toString(36).substring(7);
+
                 //check if student has ci image
-                if (student.data['ci_image']) {
-                    //delete old image
-                    fs.unlinkSync(`uploads/${student.data['ci_image']}`);
+                if (student.ci_image) {
+                    //check if file exists
+                    if (fs.existsSync(`uploads/${student.ci_image}`)) {
+                        //delete old image
+                        console.log('renamingssssssssss')
+                        fs.unlinkSync(`uploads/${student.ci_image}`);
+                    }
                 }
                 //save new image
-                fs.renameSync(`${dir}/zip/${files[i]}`, `uploads/${files[i]}`);
+                console.log('renaming')
+                fs.renameSync(`${dir}/${files[i]}`, `uploads/${randomStringForImage}.${extension}`);
                 //update student
                 await sendData({
                     filter: {
@@ -120,7 +137,8 @@ router.post('/missing/photo', async (req, res) => {
                     },
                     update: {
                         $set: {
-                            'ci_image': files[i]
+                            'ci_image': `${randomStringForImage}.${extension}`
+
                         }
                     }
                 }, 'students', 'updateOne');
@@ -129,7 +147,8 @@ router.post('/missing/photo', async (req, res) => {
     }
 
     //delete directory
-    fs.rmdirSync(dir, {recursive: true});
+    fs.rmdirSync('uploads/' + randomString, {recursive: true});
+
 
     res.redirect('/');
 
