@@ -3,60 +3,21 @@ const router = express.Router();
 const csv = require('csv-parser')
 const fs = require('fs')
 const { sendData } = require('../../src/helpers.js');
+const { findStudentsWithoutNumeroCi, findStudentsWithoutCiImage } = require('../../src/functions.js');
 
 const studentsRouter = require('./students');
 router.use('/students', studentsRouter);
 
 router.get('/', async (req, res) => {
-
-    //find students if they dont have a 'NUMERO CI' field or if it is empty
-    let students = await sendData({
-        pipeline: [
-            {
-                $match: {
-                    $or: [
-                        {
-                            'NUMERO CI': {
-                                $exists: false
-                            }
-                        },
-                        {
-                            'NUMERO CI': ''
-                        },
-                    ],
-                    $and: [
-                        {
-                            //check if the student is in current organism
-                            'organism': {
-                                $eq: {
-                                    "$oid": req.session.user.organism
-                                }
-                            }
-                        }
-                    ]
-                },
-            },
-            {
-                $lookup: {
-                    from: "organisms",
-                    localField: "organism",
-                    foreignField: "_id",
-                    as: "organism"
-                },
-            },
-            {
-                $set: {
-                    organism: {
-                        $first: '$organism'
-                    }
-                }
-            },
-        ]
-    }, 'students', 'aggregate', {});
-
+    let studentsWithoutCiNumber = await findStudentsWithoutNumeroCi(req.session.user.organism);
+    let studentsWithoutCiImage = [];
+    if (studentsWithoutCiNumber.data.documents.length === 0) {
+        studentsWithoutCiImage = await findStudentsWithoutCiImage(req.session.user.organism);
+    }
 
     res.render('front/index.html.twig', {
-        students: students.data.documents,
+        studentsWithoutCiNumber: studentsWithoutCiNumber.data.documents,
+        studentsWithoutCiImage: studentsWithoutCiImage.data.documents
     })
 });
 

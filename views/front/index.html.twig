@@ -3,10 +3,15 @@
 {% block title %}Bienvenue !{% endblock %}
 
 {% block content %}
-    {% if students is not empty %}
+    {% if studentsWithoutCiNumber is not empty %}
         <div class="alert alert-info">
-            Il y a {{ students|length }} étudiant{%  if students|length > 1 %}s{% endif %} n'ayant pas leur numéro de carte d'identité renseigné. <br>
-            <a class="alert-link" href="/students/missing">Les ajouter</a>
+            Il y a {{ studentsWithoutCiNumber|length }} étudiant{%  if studentsWithoutCiNumber|length > 1 %}s{% endif %} n'ayant pas leur numéro de carte d'identité renseigné. <br>
+            <a class="alert-link" href="/students/missing/number">Corriger</a>
+        </div>
+    {% elseif studentsWithoutCiImage is not empty %}
+        <div class="alert alert-info">
+            Il y a {{ studentsWithoutCiImage|length }} étudiant{%  if studentsWithoutCiImage|length > 1 %}s{% endif %} n'ayant pas leur photo de pièce d'identité renseignée. <br>
+            <a class="alert-link" href="/students/missing/photo">Corriger</a>
         </div>
     {% endif %}
 {% endblock %}

@@ -1,0 +1,36 @@
+{% extends '/base.html.twig' %}
+
+{% block title %}Bienvenue !{% endblock %}
+
+{% block content %}
+    <form action="/students/missing/photo" method="post" enctype="multipart/form-data">
+        <input class="form-control" placeholder="Déposer le dossier compressé des images" type="file" name="file" id="file" accept=".zip,.rar,.7zip" required />
+        <button class="btn btn-primary mt-3" type="submit">
+            <i class="fas fa-upload"></i>
+            Envoyer
+        </button>
+    </form>
+
+    <h2 class="text-center my-3">
+        Liste des étudiants sans photo de pièce d'identité
+    </h2>
+
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>Prénom</th>
+            <th>Nom</th>
+            <th>INE</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for student in students %}
+            <tr>
+                <td>{{ student.PRENOM }}</td>
+                <td>{{ student.NOM }}</td>
+                <td>{{ student.INE }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
