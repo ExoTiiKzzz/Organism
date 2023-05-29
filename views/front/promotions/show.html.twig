@@ -1,0 +1,50 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    {% if promotion is defined %}
+        Edit {{ promotion.name }}
+    {% else %}
+        Create a new promotion
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    {% set action = 'new' %}
+    {% if promotion is defined %}
+        {% set action = promotion._id %}
+    {% endif %}
+    <form action="/promotions/{{ action }}" method="post">
+        {% if promotion is defined %}
+            <a href="/promotions/{{ promotion._id }}/students">
+                <button type="button" class="btn btn-primary">Students</button>
+            </a>
+        {% endif %}
+        <div class="form-group">
+            <label for="name">Promotion name</label>
+            <input type="text" name="name" id="name" class="form-control" value="{{ promotion.name }}">
+        </div>
+
+        <div class="form-group">
+            <label for="degree">Degree</label>
+            <select name="degree" id="degree" class="form-control">
+                {% for degree in degrees %}
+                    <option value="{{ degree._id }}" {% if promotion.degree == degree._id %}selected{% endif %}>{{ degree.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        {# Start date and end date #}
+        <div class="form-group">
+            <label for="start">Start date</label>
+            <input type="date" name="start" id="start" class="form-control" value="{{ promotion.start|date('Y-m-d') }}">
+        </div>
+
+        <div class="form-group">
+            <label for="end">End date</label>
+            <input type="date" name="end" id="end" class="form-control" value="{{ promotion.end|date('Y-m-d') }}">
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save</button>
+
+    </form>
+{% endblock %}

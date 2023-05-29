@@ -6,6 +6,74 @@ const {sendData} = require('../../src/helpers.js');
 const bcrypt = require("bcrypt");
 const {findStudentsWithoutNumeroCi, findStudentsWithoutCiImage} = require("../../src/functions");
 const decompress = require('decompress');
+const csv = require("csv-parser");
+
+router.get('/', async (req, res) => {
+    let students = await sendData({
+        //get all students and if student doesn't have a promotion, promotion will be an empty array
+        pipeline: [
+            {
+                $lookup: {
+                    from: 'promotions',
+                    localField: 'promotion',
+                    foreignField: '_id',
+                    as: 'promotion'
+                },
+            },
+            {
+                $unwind: {
+                    path: '$promotion',
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $lookup: {
+                    from: 'degrees',
+                    localField: 'promotion.degree',
+                    foreignField: '_id',
+                    as: 'degree'
+                },
+            },
+            {
+                $unwind: {
+                    path: '$degree',
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $match: {
+                    organism: {
+                        $eq: {
+                            $oid: req.session.user.organism
+                        }
+                    }
+                }
+            }
+        ],
+    }, 'students', 'aggregate');
+
+    res.render('front/students/index.html.twig', {
+        students: students.data.documents
+    });
+});
+
+router.get('/new', async (req, res) => {
+    let promotions = await sendData({
+        filter: {
+            organism: {
+                $eq: {
+                    $oid: req.session.user.organism
+                }
+            }
+        }
+    }, 'promotions', 'find');
+
+    res.render('front/students/show.html.twig', {
+        promotions: promotions.data.documents
+    });
+});
+
+
 
 router.get('/missing/number', async (req, res) => {
 //find students if they dont have a 'NUMERO CI' field or if it is empty
@@ -113,7 +181,6 @@ router.post('/missing/photo', async (req, res) => {
                 let studentId = student._id;
                 //random file name with 30 characters
                 let randomStringForImage = Math.random().toString(36).substring(7) + Math.random().toString(36).substring(7) + Math.random().toString(36).substring(7);
-
                 //check if student has ci image
                 if (student.ci_image) {
                     //check if file exists
@@ -152,6 +219,155 @@ router.post('/missing/photo', async (req, res) => {
 
     res.redirect('/');
 
+});
+
+router.get('/provide', async (req, res) => {
+    //get all promotions with degree associated to the promotion
+    let promotions = await sendData({
+        pipeline: [
+            {
+                $lookup: {
+                    from: 'degrees',
+                    localField: 'degree',
+                    foreignField: '_id',
+                    as: 'degree'
+                }
+            },
+            {
+                $unwind: '$degree'
+            },
+            {
+                $match: {
+                    organism: {
+                        $eq: {
+                            $oid: req.session.user.organism
+                        }
+                    }
+                }
+            }
+        ]
+    }, 'promotions', 'aggregate');
+
+    res.render('front/provide.html.twig', {
+        promotions: promotions.data.documents
+    });
+});
+
+router.post('/provide', (req, res) => {
+    const csvRows = [];
+    //Save the file
+    if (!fs.existsSync('uploads/tmp' + req.files.csv.name)) {
+        //create directory if it doesn't exist
+        let dir = `uploads`;
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir);
+        }
+
+        if (!fs.existsSync('uploads/tmp')) {
+            fs.mkdirSync('uploads/tmp');
+        }
+    }
+    req.files.csv.mv('uploads/tmp/' + req.files.csv.name, function (err) {
+        if (err) {
+            console.log('Error saving file: ' + err);
+            res.redirect('/students/provide');
+        } else {
+            const csvRows = [];
+            fs.createReadStream('uploads/tmp/promo.csv')
+                .pipe(csv({
+                    separator: ','
+                }))
+                .on('data', (row) => {
+                    //add organism id
+                    row.organism = {
+                        "$oid": req.session.user.organism
+                    }
+                    //add promotion id
+                    row.promotion = {
+                        "$oid": req.body.promotion
+                    }
+                    csvRows.push(row);
+                })
+                .on('end', async () => {
+                    //delete the file
+                    fs.unlinkSync('uploads/tmp/' + req.files.csv.name);
+
+                    //send the data to the database
+                    let result = await sendData({
+                        "documents": csvRows
+                    }, 'students', 'insertMany');
+                    res.redirect('/students/provide');
+                });
+        }
+    });
+
+});
+
+router.get('/:id', async (req, res) => {
+    let student = await sendData({
+        filter: {
+            _id: {
+                $eq: {
+                    $oid: req.params.id
+                }
+            }
+        }
+    }, 'students', 'findOne');
+
+    let promotions = await sendData({
+        filter: {
+            organism: {
+                $eq: {
+                    $oid: req.session.user.organism
+                }
+            }
+        }
+    }, 'promotions', 'find');
+
+    let keys = Object.keys(student.data.document);
+
+    res.render('front/students/show.html.twig', {
+        student: student.data.document,
+        promotions: promotions.data.documents,
+        keys: keys
+    });
+});
+
+router.post('/:id', async (req, res) => {
+    let keys = Object.keys(req.body);
+
+    let data = req.body;
+    let update = {
+        $set: {}
+    };
+
+    for (let i = 0; i < keys.length; i++) {
+        if (data[keys[i]] !== '' && data[keys[i]] !== undefined) {
+            if (keys[i].includes('_id')) {
+                let name = keys[i].split('_id')[0];
+                update.$set[name] = {
+                    $oid: data[keys[i]]
+                }
+            } else {
+                update.$set[keys[i]] = data[keys[i]];
+            }
+        }
+    }
+
+    console.log(update);
+
+    await sendData({
+        filter: {
+            _id: {
+                $eq: {
+                    $oid: req.params.id
+                }
+            }
+        },
+        update: update
+    }, 'students', 'updateOne');
+
+    res.redirect('/students');
 });
 
 module.exports = router;

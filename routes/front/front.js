@@ -8,6 +8,12 @@ const { findStudentsWithoutNumeroCi, findStudentsWithoutCiImage } = require('../
 const studentsRouter = require('./students');
 router.use('/students', studentsRouter);
 
+const degreesRouter = require('./degrees');
+router.use('/degrees', degreesRouter);
+
+const promotionsRouter = require('./promotions');
+router.use('/promotions', promotionsRouter);
+
 router.get('/', async (req, res) => {
     let studentsWithoutCiNumber = await findStudentsWithoutNumeroCi(req.session.user.organism);
     let studentsWithoutCiImage = [];
@@ -17,46 +23,10 @@ router.get('/', async (req, res) => {
 
     res.render('front/index.html.twig', {
         studentsWithoutCiNumber: studentsWithoutCiNumber.data.documents,
-        studentsWithoutCiImage: studentsWithoutCiImage?.data?.documents
+        studentsWithoutCiImage: studentsWithoutCiImage?.data?.documents,
     })
 });
 
-router.get('/provide', (req, res) => {
-    res.render('front/provide.html.twig');
-});
 
-router.post('/provide', (req, res) => {
-    const csvRows = [];
-    //Save the file
-    req.files.csv.mv('public/uploads/' + req.files.csv.name, function (err) {
-        if (err) {
-            res.redirect('/provide');
-        } else {
-            const csvRows = [];
-            fs.createReadStream('public/uploads/promo.csv')
-                .pipe(csv({
-                    separator: ','
-                }))
-                .on('data', (row) => {
-                    //add organism id
-                    row.organism = {
-                        "$oid": req.session.user.organism
-                    }
-                    csvRows.push(row);
-                })
-                .on('end', async () => {
-                    //delete the file
-                    fs.unlinkSync('public/uploads/' + req.files.csv.name);
-
-                    //send the data to the database
-                    let result = await sendData({
-                        "documents": csvRows
-                    }, 'students', 'insertMany');
-                    res.redirect('/provide');
-                });
-        }
-    });
-
-});
 
 module.exports = router;

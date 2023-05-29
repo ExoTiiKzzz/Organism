@@ -1,0 +1,57 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    {{ (promotion.name ~ ' students') | capitalize }}
+{% endblock %}
+
+{% block content %}
+    <h1>{{ (promotion.name ~ ' students') | capitalize }}</h1>
+
+    <div class="mb-3">
+        <a class="btn btn-primary" href="/students/new">Add new student</a>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Promotion</th>
+                <th>Firstname</th>
+                <th>Lastname</th>
+                <th>Birthdate</th>
+                <th>INE</th>
+                <th>Phone number</th>
+                <th>Address</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for student in students %}
+            <tr>
+                <td>
+                    {% if student.promotion is defined %}
+                        {{ student.promotion.name }} ({{ student.degree.name }} - du {{ student.promotion.start|date('d/m/Y') }} au {{ student.promotion.end|date('d/m/Y') }})
+                    {% else %}
+                        <span class="text-danger">
+                            Promotion is missing
+                        </span>
+                    {% endif %}
+                </td>
+                <td>{{ student.PRENOM ?? '' }}</td>
+                <td>{{ student.NOM }}</td>
+                <td>{{ student['DATE DE NAISSANCE'] ? student['DATE DE NAISSANCE']|date('d/m/Y') : '' }}</td>
+                <td>{{ student.INE ?? 'Manquant' }}</td>
+                <td>{{ student['NUMERO DE TELEPHONE'] ?? student['NUMERO DE TELEPHONE PORTABLE'] ?? '' }}</td>
+                <td>{{ (student.ADRESSE ~ ' ' ~ student['CODE POSTAL'] ~ ' ' ~ student.VILLE) ?? '' }}</td>
+                <td>
+                    <a class="btn btn-primary" href="/students/{{ student._id }}">Show</a>
+                    <a class="btn btn-danger" href="/students/{{ student._id }}/delete">Delete</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="8">No records found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Les diplômes
+{% endblock %}
+
+{% block content %}
+    <h1>Les diplômes</h1>
+    <a href="/degrees/new">
+        <button class="btn btn-primary mb-3">Ajouter un diplôme</button>
+    </a>
+
+    {% if degrees is not empty %}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Intitulé</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for degree in degrees %}
+                    <tr>
+                        <td>{{ degree.name }}</td>
+                        <td>
+                            <a href="/degrees/{{ degree._id }}">
+                                <button class="btn btn-primary">Voir</button>
+                            </a>
+                            <a href="/degrees/{{ degree._id }}/delete">
+                                <button class="btn btn-danger">Supprimer</button>
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="alert alert-info">
+            Aucun diplôme n'a été trouvé.
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.querySelectorAll('.btn-danger').forEach(function(button) {
+            button.addEventListener('click', function(event) {
+                if (!confirm('Voulez-vous vraiment supprimer ce diplôme ?')) {
+                    event.preventDefault();
+                }
+            });
+        });
+    </script>
+{% endblock %}

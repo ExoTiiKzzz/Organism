@@ -1,0 +1,56 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    {% if student is defined %}
+        {{ student.PRENOM }} {{ student.NOM }}
+    {% else %}
+        Add a new student
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    <h1>
+        {% if student is defined %}
+            Edit student
+        {% else %}
+            Add a new student
+        {% endif %}
+    </h1>
+
+    {% set action = 'new' %}
+    {% if student is defined %}
+        {% set action = student._id %}
+    {% endif %}
+
+    <form action="/students/{{ action }}" method="post" class="row">
+        <div class="form-group col-6">
+            <label for="promotion_id">Promotion</label>
+            <select name="promotion_id" id="promotion_id" class="form-select">
+                {% for promotion in promotions %}
+                    {% set selected = '' %}
+                    {% if student is defined and student.promotion == promotion._id %}
+                        {% set selected = 'selected' %}
+                    {% endif %}
+                    <option value="{{ promotion._id }}" {{ selected }}>{{ promotion.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        {% for key in keys %}
+            {% if key not in ['_id', 'organism', 'ci_image', 'promotion'] %}
+            <div class="form-group col-6">
+                <label for="{{ key }}">{{ key }}</label>
+                {% set type = 'text' %}
+                {% set value = student[key] %}
+                {% if 'date' in (key|lower) %}
+                    {% set type = 'date' %}
+                    {% set value = value|date('Y-m-d') %}
+                {% endif %}
+                <input type="{{ type }}" class="form-control" id="{{ key }}" name="{{ key }}" value="{{ value }}">
+            </div>
+            {% endif %}
+        {% endfor %}
+
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+{% endblock %}

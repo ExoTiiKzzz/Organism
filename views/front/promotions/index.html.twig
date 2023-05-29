@@ -1,0 +1,60 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Les promotions
+{% endblock %}
+
+{% block content %}
+    <h1>Les promotions</h1>
+    <a href="/promotions/new">
+        <button class="btn btn-primary mb-3">Ajouter une promotion</button>
+    </a>
+
+    {% if promotions is not empty %}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Promotion</th>
+                    <th>Diplôme</th>
+                    <th>Dates</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for promotion in promotions %}
+                    <tr>
+                        <td>{{ promotion.name }}</td>
+                        <td>{{ promotion.degree.name }}</td>
+                        <td>Du {{ promotion.start|date('d/m/Y') }} au {{ promotion.end|date('d/m/Y') }}</td>
+                        <td>
+                            <a href="/promotions/{{ promotion._id }}">
+                                <button class="btn btn-primary">Voir</button>
+                            </a>
+                            <a href="/promotions/{{ promotion._id }}/delete">
+                                <button class="btn btn-danger">Supprimer</button>
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="alert alert-info">
+            Aucune promotion n'a été trouvée.
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.querySelectorAll('.btn-danger').forEach(function(button) {
+            button.addEventListener('click', function(event) {
+                if (!confirm('Voulez-vous vraiment supprimer cette promotion ?')) {
+                    event.preventDefault();
+                }
+            });
+        });
+    </script>
+{% endblock %}

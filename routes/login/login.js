@@ -5,7 +5,8 @@ const { sendData } = require('../../src/helpers.js');
 
 router.get('/', (req, res) => {
 	if (req.session?.user) {
-		res.redirect('');
+		res.redirect('/');
+		return;
 	}
 	res.render('login.html.twig', {
 		lastUsername: req.query.lastUsername

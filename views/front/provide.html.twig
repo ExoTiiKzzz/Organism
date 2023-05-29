@@ -3,15 +3,22 @@
 {% block title %}New students{% endblock %}
 
 {% block content %}
-    <form method="post" enctype="multipart/form-data" action="/provide">
+    <form method="post" enctype="multipart/form-data" action="/students/provide">
+
         <div class="form-group">
-            <label for="year">Year</label>
-            <input type="text" class="form-control" id="year" name="year" placeholder="Year">
+            <label for="promotion">Promotion</label>
+            <select name="promotion" id="promotion" class="form-select" required>
+                {% for promotion in promotions %}
+                    <option value="{{ promotion._id }}">
+                        {{ promotion.name }} ({{ promotion.degree.name }} - du {{ promotion.start|date('d/m/Y') }} au {{ promotion.end|date('d/m/Y') }})
+                    </option>
+                {% endfor %}
+            </select>
         </div>
 
         <div class="form-group">
             <label for="csv">CSV</label>
-            <input class="form-control" type="file" name="csv" id="csv">
+            <input class="form-control" type="file" name="csv" id="csv" required accept=".csv">
         </div>
 
         <button type="submit" class="btn btn-primary">Submit</button>
