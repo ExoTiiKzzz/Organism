@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
 
-const {sendData} = require('../../src/helpers.js');
+const { sendData, sendEmail } = require('../../src/helpers');
 const bcrypt = require("bcrypt");
+const fs = require("fs");
+
 
 router.get('/', async (req, res) => {
 	let data = {
@@ -54,15 +56,19 @@ router.get('/', async (req, res) => {
 });
 
 router.get('/new', async (req, res) => {
+	console.log('new user')
 	let organisms = await sendData({}, 'organisms', 'find');
-	res.render('admin/users/show.html.twig', {
+	return res.render('admin/users/show.html.twig', {
 		organisms: organisms.data.documents,
 	});
 });
 
 router.post('/new', async (req, res) => {
 	//create new user
-	const { image } = req.files;
+	let image = null;
+	if (req.files) {
+		image = req.files.image;
+	}
 
 	let imageFile = '';
 
@@ -70,14 +76,16 @@ router.post('/new', async (req, res) => {
 		//check if image is valid
 		if (!image.mimetype.startsWith('image')) return res.sendStatus(400);
 
+		//check if folder exists
+		if (!fs.existsSync('public/images')) fs.mkdirSync('public/images');
+
 		//create pepper for image name without any symbols
 		let pepper = Math.random().toString(36).substring(7);
 		pepper = pepper.replace(/[^a-zA-Z0-9 ]/g, "");
 
 		imageFile = image.name.split('.')[0] + pepper + '.' + image.mimetype.split('/')[1];
-		await image.mv('./public/images/' + imageFile);
+		await image.mv('public/images/' + imageFile);
 	}
-
 	let plainPassword = req.body.name + '123!';
 	let hashedPassword = await bcrypt.hash(plainPassword, 12);
 
@@ -90,14 +98,26 @@ router.post('/new', async (req, res) => {
 				},
 				"image": imageFile,
 				"password": hashedPassword,
+				"email": req.body.email,
 			}
 		]
 	}, 'users', 'insertMany');
-	res.redirect('/admin/users/' + user.data.insertedIds[0]);
+
+	let mailres = await sendEmail({
+		subject: "Account created",
+		text: "Hello, your account has been created. Your password is: " + plainPassword,
+		to: req.body.email,
+		from: process.env.MAIL_ADDRESS
+	});
+
+	console.log(mailres);
+
+	res.redirect('/admin/users');
 });
 
 router.get('/:id', async (req, res) => {
 	//only get one user
+	console.log('new user')
 	let user = await sendData({
 		"pipeline": [
 			{
@@ -127,7 +147,10 @@ router.get('/:id', async (req, res) => {
 
 
 	let organisms = await sendData({}, 'organisms', 'find');
-	res.render('admin/users/show.html.twig', {user: user.data.documents[0], organisms: organisms.data.documents});
+	res.render('admin/users/show.html.twig', {
+		extuser: user.data.documents[0],
+		organisms: organisms.data.documents
+	});
 });
 
 router.post('/delete', async (req, res) => {
@@ -176,6 +199,7 @@ router.post('/:id', async (req, res) => {
 				"organism": {
 					"$oid": req.body.organism
 				},
+				"email": req.body.email,
 			}
 		}
 	};

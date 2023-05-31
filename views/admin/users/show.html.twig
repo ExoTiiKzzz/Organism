@@ -6,28 +6,33 @@
 
 {% block content %}
     {% set action = '/admin/users/new' %}
-    {% if user is defined and user._id %}
-        {% set action = '/admin/users/' ~ user._id %}
+    {% if extuser is defined and extuser._id %}
+        {% set action = '/admin/users/' ~ extuser._id %}
     {% endif %}
     <form method="post" class="form" action="{{ action }}" enctype="multipart/form-data">
         <div class="form-group">
             <label for="name">Name</label>
-            <input type="text" name="name" id="name" value="{{ user.username }}" class="form-control">
+            <input type="text" name="name" id="name" value="{{ extuser.username }}" class="form-control">
+        </div>
+
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" name="email" id="email" value="{{ extuser.email }}" class="form-control" required>
         </div>
 
         <div class="form-group mt-3">
             <label for="organism">organism</label>
             <select class="form-select" name="organism" id="organism">
                 {% for organism in organisms %}
-                    <option value="{{ organism._id }}" {% if user is defined and user.organism._id == organism._id %}selected{% endif %}>{{ organism.name }}</option>
+                    <option value="{{ organism._id }}" {% if extuser is defined and extuser.organism._id == organism._id %}selected{% endif %}>{{ organism.name }}</option>
                 {% endfor %}
             </select>
         </div>
 
         <div class="form-group mt-3">
-            {% if user.image is defined %}
+            {% if extuser.image is defined %}
                 <div class="col-md-2">
-                    <img class="img-fluid" src="/images/{{ user.image }}" alt="{{ user.username }}" />
+                    <img class="img-fluid" src="/images/{{ extuser.image }}" alt="{{ extuser.username }}" />
                 </div>
             {% endif %}
 

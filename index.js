@@ -4,6 +4,7 @@ const port = process.env.PORT || 8000;
 const sessions = require('express-session');
 const fileUpload = require('express-fileupload');
 const fastcsv = require('fast-csv');
+const dotenv = require("dotenv");
 
 //use twig as template rendering engine
 const twig = require('twig');
@@ -11,6 +12,7 @@ app.set('view engine', 'twig');
 app.use(express.static('public'));
 app.use(express.urlencoded({extended: true}));
 app.use(fileUpload({}));
+dotenv.config();
 
 const oneDay = 1000 * 60 * 60 * 24;
 app.use(sessions({

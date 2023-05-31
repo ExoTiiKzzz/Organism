@@ -98,6 +98,34 @@ const findStudentsWithoutCiImage = async (organism) => {
 	return students;
 }
 
+const findStudentsWithoutNumeroCiByOrganism = async () => {
+	let organisms = await sendData({}, 'organisms', 'find', {});
+	let students = [];
+	for (let i = 0; i < organisms.data.documents.length; i++) {
+		let organism = organisms.data.documents[i];
+		let studentsWithoutNumeroCi = await findStudentsWithoutNumeroCi(organism._id);
+		if (studentsWithoutNumeroCi.data.documents.length > 0) {
+			students[organism.email] = studentsWithoutNumeroCi.data.documents;
+		}
+	}
+
+	return students;
+}
+
+const findStudentsWithoutCiImageByOrganism = async () => {
+	let organisms = await sendData({}, 'organisms', 'find', {});
+	let students = [];
+	for (let i = 0; i < organisms.data.documents.length; i++) {
+		let organism = organisms.data.documents[i];
+		let studentsWithoutCiImage = await findStudentsWithoutCiImage(organism._id);
+		if (studentsWithoutCiImage.data.documents.length > 0) {
+			students[organism.email] = studentsWithoutCiImage.data.documents;
+		}
+	}
+
+	return students;
+}
+
 const findStudents = async (params = {}) => {
 	let filters = {};
 	if (params.hasOwnProperty('organism')) {
@@ -215,5 +243,6 @@ const findStudents = async (params = {}) => {
 
 module.exports = {
 	findStudentsWithoutNumeroCi,
-	findStudentsWithoutCiImage
+	findStudentsWithoutCiImage,
+	findStudentsWithoutNumeroCiByOrganism,
 }

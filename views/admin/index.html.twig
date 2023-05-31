@@ -21,6 +21,7 @@
                     </label>
                 </th>
                 <th>Username</th>
+                <th>Email</th>
                 <th>Organism</th>
                 <th>Actions</th>
             </tr>
@@ -35,6 +36,7 @@
                     </td>
 
                     <td>{{ user.username }}</td>
+                    <td>{{ user.email }}</td>
                     <td>
                         {{ user.organism.name ?? 'Unknown' }}
                     </td>

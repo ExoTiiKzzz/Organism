@@ -30,6 +30,7 @@ router.post('/new', async (req, res) => {
 		"documents": [
 			{
 				"name": req.body.name,
+				"email": req.body.email,
 			}
 		]
 	}, 'organisms', 'insertMany');
@@ -75,6 +76,7 @@ router.post('/:id', async (req, res) => {
 		"update": {
 			"$set": {
 				"name": req.body.name,
+				"email": req.body.email,
 			}
 		}
 	}, 'organisms', 'updateOne');
