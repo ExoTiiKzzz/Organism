@@ -1,17 +1,59 @@
 {% set action = '/students' %}
-
+{% set expanded = false %}
+{% if request | length > 0 %}
+    {% set expanded = true %}
+{% endif %}
 <form action="{{ action }}">
     <div class="accordion" id="accordionFilters">
         <div class="accordion-item">
             <h2 class="accordion-header" id="filter-title">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#filter-collapse" aria-expanded="false" aria-controls="filter-collapse">
+                <button class="accordion-button {% if not expanded %} collapsed {% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#filter-collapse" aria-expanded="{{ expanded ? 'true' : 'false' }}" aria-controls="filter-collapse">
                     Filters
                 </button>
             </h2>
-            <div id="filter-collapse" class="accordion-collapse collapse p-3" aria-labelledby="filter-title" data-bs-parent="#accordionFilters">
-                <div class="form-group">
-                    <label for="search">Search</label>
-                    <input type="text" name="search" id="search" class="form-control" placeholder="Search" value="{{ request.search }}">
+            <div id="filter-collapse" class="accordion-collapse collapse p-3 row {% if expanded == true %} show {% endif %}" aria-labelledby="filter-title" data-bs-parent="#accordionFilters">
+                {% if user.role == 'admin' %}
+                    <div class="form-group col-md-4 col-lg-4">
+                        <label for="organism">Organisms</label>
+                        <select name="organism[]" id="organism" class="form-select" multiple>
+                            <option value="">All</option>
+                            {% for organism in organisms %}
+                                <option value="{{ organism._id }}" {% if organism._id in request.organism %}selected{% endif %}>{{ organism.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% endif %}
+
+                <div class="form-group col-md-4 col-lg-4">
+                    <label for="promotion">Promotion</label>
+                    <select name="promotion[]" id="promotion" class="form-select" multiple>
+                        <option value="">All</option>
+                        {% for promotion in promotions %}
+                            <option value="{{ promotion._id }}" {% if promotion._id in request.promotion %}selected{% endif %}>{{ promotion.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group col-md-4 col-lg-4">
+                    <label for="degree">Degree</label>
+                    <select name="degree[]" id="degree" class="form-select" multiple>
+                        <option value="">All</option>
+                        {% for degree in degrees %}
+                            <option value="{{ degree._id }}" {% if degree._id in request.degree %}selected{% endif %}>{{ degree.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group col-md-4 col-lg-4 row">
+                    <div class="col-6">
+                        <label for="start">Degree's start date</label>
+                        <input type="date" name="start" id="start" class="form-control" value="{{ request.start }}">
+                    </div>
+
+                    <div class="col-6">
+                        <label for="end">Degree's end date</label>
+                        <input type="date" name="end" id="end" class="form-control" value="{{ request.end }}">
+                    </div>
                 </div>
 
                 <button class="btn btn-primary" type="submit">

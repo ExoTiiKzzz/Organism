@@ -4,56 +4,45 @@ const fs = require('fs');
 
 const {sendData} = require('../../src/helpers.js');
 const bcrypt = require("bcrypt");
-const {findStudentsWithoutNumeroCi, findStudentsWithoutCiImage} = require("../../src/functions");
+const {findStudentsWithoutNumeroCi, findStudentsWithoutCiImage, findStudents} = require("../../src/functions");
 const decompress = require('decompress');
 const csv = require("csv-parser");
 
 router.get('/', async (req, res) => {
-    let students = await sendData({
-        //get all students and if student doesn't have a promotion, promotion will be an empty array
-        pipeline: [
-            {
-                $lookup: {
-                    from: 'promotions',
-                    localField: 'promotion',
-                    foreignField: '_id',
-                    as: 'promotion'
-                },
-            },
-            {
-                $unwind: {
-                    path: '$promotion',
-                    preserveNullAndEmptyArrays: true
-                }
-            },
-            {
-                $lookup: {
-                    from: 'degrees',
-                    localField: 'promotion.degree',
-                    foreignField: '_id',
-                    as: 'degree'
-                },
-            },
-            {
-                $unwind: {
-                    path: '$degree',
-                    preserveNullAndEmptyArrays: true
-                }
-            },
-            {
-                $match: {
-                    organism: {
-                        $eq: {
-                            $oid: req.session.user.organism
-                        }
-                    }
+    let query = {...req.query};
+    let organisms = [];
+    if (req.session.user.role === 'admin') {
+        organisms = await sendData({}, 'organisms', 'find');
+        organisms = organisms.data.documents;
+    }
+    if (query.organism === undefined && req.session.user.role !== 'admin') {
+        query.organism = req.session.user.organism;
+    }
+    let students = await findStudents({
+        query,
+    });
+
+
+    let promotions = await sendData({
+        filter: {
+            organism: {
+                $eq: {
+                    $oid: req.session.user.organism
                 }
             }
-        ],
-    }, 'students', 'aggregate');
+        }
+    }, 'promotions', 'find');
+
+    let degrees = await sendData({}, 'degrees', 'find');
+
+    let request = req.query;
 
     res.render('front/students/index.html.twig', {
-        students: students.data.documents
+        students: students.data.documents,
+        promotions: promotions.data.documents,
+        degrees: degrees.data.documents,
+        organisms: organisms,
+        request: request
     });
 });
 
@@ -132,7 +121,6 @@ router.post('/missing/photo', async (req, res) => {
     let randomString = Math.random().toString(36).substring(7) + Math.random().toString(36).substring(7) + Math.random().toString(36).substring(7);
     let uploadDir = 'uploads';
     if (!fs.existsSync(uploadDir)) {
-        console.log('qbjsqjbdqsjbdjnj')
         fs.mkdirSync(uploadDir);
     }
     //create directory if it doesn't exist
@@ -142,19 +130,16 @@ router.post('/missing/photo', async (req, res) => {
     }
     //save file
     let zip = req.files.file;
-    console.log('pdpdsppsdf')
     await zip.mv(`${dir}/${zip.name}`, async function (err) {
 
     });
-
     //unzip file
-    console.log('pisdoqjdojsqd')
     await decompress(`${dir}/${zip.name}`, dir);
 
     dir = `${dir}/${zip.name.split('.')[0]}`;
 
+
     //get all files in directory
-    console.log('qsdqsdqsd')
     let files = fs.readdirSync(dir);
 
     //loop through files
@@ -353,8 +338,6 @@ router.post('/:id', async (req, res) => {
             }
         }
     }
-
-    console.log(update);
 
     await sendData({
         filter: {

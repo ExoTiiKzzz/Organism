@@ -6,3 +6,7 @@ a {
 .form-group {
     margin-bottom: 1rem;
 }
+
+.dataTables_wrapper {
+    margin-top: 1.5rem;
+}

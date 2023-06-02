@@ -47,8 +47,8 @@ router.post('/new', async (req, res) => {
 				"degree": {
 					"$oid": req.body.degree
 				},
-				"start": req.body.start,
-				"end": req.body.end,
+				"start": new Date(req.body.start),
+				"end": new Date(req.body.end),
 				"organism": {
 					"$oid": req.session.user.organism
 				}
@@ -89,8 +89,8 @@ router.post('/:id', async (req, res) => {
 				"degree": {
 					"$oid": req.body.degree
 				},
-				"start": req.body.start,
-				"end": req.body.end,
+				"start": new Date(req.body.start),
+				"end": new Date(req.body.end),
 			}
 		}
 	}, 'promotions', 'updateOne');

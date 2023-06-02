@@ -16,6 +16,9 @@
     <table class="table">
         <thead>
             <tr>
+                {% if user.role == 'admin' %}
+                    <th>Organism</th>
+                {% endif %}
                 <th>Promotion</th>
                 <th>Firstname</th>
                 <th>Lastname</th>
@@ -29,6 +32,17 @@
         <tbody>
         {% for student in students %}
             <tr>
+                {% if user.role == 'admin' %}
+                    <td>
+                        {% if student.organism is defined %}
+                            {{ student.organism.name }}
+                        {% else %}
+                            <span class="text-danger">
+                                Organism is missing
+                            </span>
+                        {% endif %}
+                    </td>
+                {% endif %}
                 <td>
                     {% if student.promotion is defined %}
                         {{ student.promotion.name }} ({{ student.degree.name }} - du {{ student.promotion.start|date('d/m/Y') }} au {{ student.promotion.end|date('d/m/Y') }})
@@ -48,10 +62,6 @@
                     <a class="btn btn-primary" href="/students/{{ student._id }}">Show</a>
                     <a class="btn btn-danger" href="/students/{{ student._id }}/delete">Delete</a>
                 </td>
-            </tr>
-        {% else %}
-            <tr>
-                <td colspan="8">No records found</td>
             </tr>
         {% endfor %}
         </tbody>

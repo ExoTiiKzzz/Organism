@@ -126,62 +126,114 @@ const findStudentsWithoutCiImageByOrganism = async () => {
 	return students;
 }
 
+const findStudentsWithMissingInfos = async () => {
+	let organisms = await sendData({}, 'organisms', 'find', {});
+	let missingInfos = [];
+	for (let i = 0; i < organisms.data.documents.length; i++) {
+		let organism = organisms.data.documents[i];
+		let studentsWithoutNumeroCi = await findStudentsWithoutNumeroCi(organism._id);
+		let studentsWithoutCiImage = await findStudentsWithoutCiImage(organism._id);
+		if (studentsWithoutNumeroCi.data.documents.length > 0 || studentsWithoutCiImage.data.documents.length > 0) {
+			missingInfos.push(
+				{
+					organism: organism.email,
+					studentsWithoutNumeroCi: studentsWithoutNumeroCi.data.documents,
+					studentsWithoutCiImage: studentsWithoutCiImage.data.documents
+				}
+			)
+		}
+	}
+
+	return missingInfos;
+}
+
 const findStudents = async (params = {}) => {
 	let filters = {};
-	if (params.hasOwnProperty('organism')) {
-		if (Array.isArray(params.organism)) {
-			filters.organism = {
-				$in: params.organism.map((organism) => {
-					return {
-						"$oid": organism
+	let possibleFilters = [
+		{
+			key: 'organism',
+			field: 'organism._id',
+		},
+		{
+			key: 'promotion',
+			field: 'promotion._id',
+		},
+		{
+			key: 'degree',
+			field: 'degree._id',
+		}
+	]
+
+	let $and = [];
+
+	if (params.hasOwnProperty('query') && Object.keys(params.query).length > 0) {
+		let query = params.query;
+		//loop through possible filters
+
+		possibleFilters.forEach(filter => {
+			let key = filter.key;
+			let field = filter.field;
+			if (query.hasOwnProperty(key) && query[key] !== '' && query[key] !== null && query[key] !== undefined) {
+				let obj = {};
+				if (Array.isArray(query[key])) {
+					obj = {
+						[field]: {
+							$in: []
+						}
+					};
+					query[key].forEach(param => {
+						if (param !== '' && param !== null && param !== undefined) {
+							obj[field].$in.push({
+								"$oid": param
+							});
+						}
+					});
+
+					if (obj[field].$in.length === 0) {
+						delete obj[field];
 					}
-				})
-			}
-		} else {
-			filters.organism = {
-				$eq: {
-					"$oid": params.organism
+				} else {
+					obj = {
+						[field]: {
+							$eq: {
+								"$oid": query[key]
+							}
+						}
+					};
+				}
+
+				//check if obj is not empty
+				if (Object.keys(obj).length > 0) {
+					$and.push(obj);
 				}
 			}
+		});
+
+		//check if query has start date
+		if (query.hasOwnProperty('start') && query.start !== '' && query.start !== null && query.start !== undefined) {
+			let obj = {};
+			obj['promotion.start'] = {
+				$gte: new Date(query.start)
+			};
+			$and.push(obj);
 		}
+
+		//check if query has end date
+		if (query.hasOwnProperty('end') && query.end !== '' && query.end !== null && query.end !== undefined) {
+			let obj = {};
+			obj['promotion.end'] = {
+				$lte: new Date(query.end)
+			};
+			$and.push(obj);
+		}
+
+		console.log($and)
 	}
 
-	if (params.hasOwnProperty('promotion')) {
-		//check if there is multiple promotions
-		if (Array.isArray(params.promotion)) {
-			filters.promotion = {
-				$in: params.promotion.map((promotion) => {
-					return {
-						"$oid": promotion
-					}
-				})
-			}
-		} else {
-			filters.promotion = {
-				$eq: {
-					"$oid": params.promotion
-				}
-			}
-		}
-	}
 
-	if (params.hasOwnProperty('degree')) {
-		//check if there is multiple degrees
-		if (Array.isArray(params.degree)) {
-			filters.degree = {
-				$in: params.degree.map((degree) => {
-					return {
-						"$oid": degree
-					}
-				})
-			}
-		} else {
-			filters.degree = {
-				$eq: {
-					"$oid": params.degree
-				}
-			}
-		}
+	if ($and.length > 0) {
+		console.log($and);
+		filters.$and = $and;
 	}
 
 	if (params.hasOwnProperty('search')) {
@@ -192,21 +244,12 @@ const findStudents = async (params = {}) => {
 	return await sendData({
 		pipeline: [
 			{
-				$match: filters
-			},
-			{
 				$lookup: {
 					from: "organisms",
 					localField: "organism",
 					foreignField: "_id",
 					as: "organism"
 				},
-			},
-			{
-				$unwind: {
-					path: '$organism',
-					preserveNullAndEmptyArrays: true
-				}
 			},
 			{
 				$lookup: {
@@ -217,17 +260,23 @@ const findStudents = async (params = {}) => {
 				}
 			},
 			{
-				$unwind: {
-					path: '$promotion',
-					preserveNullAndEmptyArrays: true
-				}
-			},
-			{
 				$lookup: {
 					from: "degrees",
 					localField: "promotion.degree",
 					foreignField: "_id",
-					as: "degree"
+					as: "degree",
+				}
+			},
+			{
+				$unwind: {
+					path: '$organism',
+					preserveNullAndEmptyArrays: true
+				}
+			},
+			{
+				$unwind: {
+					path: '$promotion',
+					preserveNullAndEmptyArrays: true
 				}
 			},
 			{
@@ -235,7 +284,10 @@ const findStudents = async (params = {}) => {
 					path: '$degree',
 					preserveNullAndEmptyArrays: true
 				}
-			}
+			},
+			{
+				$match: filters
+			},
 		]
 	}, 'students', 'aggregate', {});
 
@@ -245,4 +297,7 @@ module.exports = {
 	findStudentsWithoutNumeroCi,
 	findStudentsWithoutCiImage,
 	findStudentsWithoutNumeroCiByOrganism,
+	findStudentsWithoutCiImageByOrganism,
+	findStudentsWithMissingInfos,
+	findStudents
 }

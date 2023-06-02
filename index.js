@@ -25,6 +25,7 @@ app.use(sessions({
 app.use((req, res, next) => {
     if (req.session?.user) {
         res.locals.user = req.session?.user;
+        res.locals.organism = req.session?.organism;
         next();
     } else {
         //check if url is login

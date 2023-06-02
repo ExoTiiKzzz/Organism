@@ -24,11 +24,19 @@ router.post('/', async (req, res) => {
 	}, 'users', 'findOne');
 
 	if (user.data.document) {
-		bcrypt.compare(password, user.data.document.password, (err, result) => {
+		bcrypt.compare(password, user.data.document.password, async (err, result) => {
 			if (result) {
+				console.log(user.data.document);
+				let organism = await sendData({
+					"filter": {
+						"_id": {
+							"$oid": user.data.document.organism
+						}
+					}
+				}, 'organisms', 'findOne');
 				req.session.user = user.data.document;
-				//set locals for twig
-				res.locals.user = user.data.document;
+				req.session.organism = organism.data.document;
+
 				res.redirect('/');
 			} else {
 				res.redirect('/login?lastUsername=' + username);
