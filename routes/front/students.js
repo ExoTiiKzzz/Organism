@@ -142,6 +142,7 @@ router.post('/missing/photo', async (req, res) => {
     //get all files in directory
     let files = fs.readdirSync(dir);
 
+
     //loop through files
     let imageExtensions = ['jpg', 'jpeg', 'png'];
     for (let i = 0; i < files.length; i++) {
@@ -155,6 +156,11 @@ router.post('/missing/photo', async (req, res) => {
                 filter: {
                     'NUMERO CI': {
                         $eq: studentCiNumber
+                    },
+                    organism: {
+                        $eq: {
+                            $oid: req.session.user.organism
+                        }
                     }
                 }
             }, 'students', 'findOne');
@@ -171,15 +177,13 @@ router.post('/missing/photo', async (req, res) => {
                     //check if file exists
                     if (fs.existsSync(`uploads/${student.ci_image}`)) {
                         //delete old image
-                        console.log('renamingssssssssss')
                         fs.unlinkSync(`uploads/${student.ci_image}`);
                     }
                 }
                 //save new image
-                console.log('renaming')
                 fs.renameSync(`${dir}/${files[i]}`, `uploads/${randomStringForImage}.${extension}`);
                 //update student
-                await sendData({
+                let res = await sendData({
                     filter: {
                         _id: {
                             $eq: {
@@ -194,6 +198,7 @@ router.post('/missing/photo', async (req, res) => {
                         }
                     }
                 }, 'students', 'updateOne');
+                console.log(res?.data, studentId);
             }
         }
     }
